@@ -12,6 +12,7 @@
     <script type="text/javascript">
         var data = {
    nodes: [{
+     id: "n0",
      name: "A",
      width:250,
      height:300,
@@ -19,6 +20,7 @@
      x: 200,
      y: 150,
      nodes:[{
+       id: "n0.0",
        name: "A",
        width:220,
        height:200,
@@ -26,6 +28,7 @@
        x: 10,
        y: 80,
        nodes:[{
+         id: "n0.0.0",
          name: "A",
          width:180,
          height:100,
@@ -36,6 +39,7 @@
        }]
      }]
    }, {
+     id: "n1",
      name: "B",
      width:250,
      height:250,
@@ -44,6 +48,7 @@
      y: 300,
      nodes:[]
    }, {
+     id: "n2",
      name: "C",
      width:250,
      height:250,
@@ -52,6 +57,7 @@
      y: 300,
      nodes:[]
    }, {
+     id: "n3",
      name: "D",
      width:250,
      height:250,
@@ -61,14 +67,14 @@
      nodes:[]
    }],
    links: [{
-     source: 0,
-     target: 1
+     source: 'n0',
+     target: 'n1'
    }, {
-     source: 1,
-     target: 2
+     source: 'n1',
+     target: 'n2'
    }, {
-     source: 2,
-     target: 3
+     source: 'n2',
+     target: 'n3'
    }, ]
  };
 
@@ -85,9 +91,9 @@
      d3.select(this).attr("transform", "translate(" + d.x + "," + d.y + ")");
      //d3.select(this).attr("cx", d.x).attr("cy", d.y);
      links.each(function(l, li) {
-       if (l.source == i) {
+       if (l.source == d.id) {
          d3.select(this).attr("x1", d.x + 15).attr("y1", d.y +15);
-       } else if (l.target == i) {
+       } else if (l.target == d.id) {
          d3.select(this).attr("x2", d.x+ 15).attr("y2", d.y + 15);
        }
      });
@@ -138,6 +144,14 @@
         .text('name this thing').style("text-anchor", "middle");
   }
   
+  function recurseIndex(nodes, keys) {
+    nodes.forEach(function (node){
+      keys[node.id]=node;
+      if (node.nodes && node.nodes instanceof Array && node.nodes.length > 0){
+        recurseIndex(node.nodes, keys);
+      }
+    });
+  }
   function recurse(sel) {
     sel.each(function(d) {
       var container = d3.select(this);
@@ -150,22 +164,23 @@
     sel.call(drag);
   }
   
+  data.keys={};
+  recurseIndex(data.nodes, data.keys);
+  
+  //console.log(data);
+  //console.log(data.keys['n0']);
  var links = svg.selectAll("link")
    .data(data.links)
    .enter()
    .append("line")
    .attr("class", "link")
    .attr("x1", function(l) {
-     var sourceNode = data.nodes.filter(function(d, i) {
-       return i == l.source
-     })[0];
+     var sourceNode = data.keys[l.source];
      d3.select(this).attr("y1", sourceNode.y);
      return sourceNode.x
    })
    .attr("x2", function(l) {
-     var targetNode = data.nodes.filter(function(d, i) {
-       return i == l.target
-     })[0];
+     var targetNode = data.keys[l.target];
      d3.select(this).attr("y2", targetNode.y);
      return targetNode.x
    })
